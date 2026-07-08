@@ -45,10 +45,10 @@ function findGroup(key) {
 
 function buildPanelEmbed() {
   return new EmbedBuilder()
-    .setTitle("📋 Création de ticket - Recrutement")
+    .setTitle("📋 Création de ticket - Embauche")
     .setDescription(
-      "Sélectionne le groupe / la famille pour laquelle tu souhaites postuler.\n\n" +
-        "Un salon privé sera créé et le staff étudiera ta candidature."
+      "Sélectionne l'entreprise pour laquelle tu souhaites postuler.\n\n" +
+        "Un salon privé sera créé et le patron / le staff étudiera ta candidature."
     )
     .setColor(0x2b2d31);
 }
@@ -56,7 +56,7 @@ function buildPanelEmbed() {
 function buildPanelRow() {
   const select = new StringSelectMenuBuilder()
     .setCustomId("ticket_group_select")
-    .setPlaceholder("Choisis un groupe...")
+    .setPlaceholder("Choisis une entreprise...")
     .addOptions(
       config.GROUPS.map((g) => ({
         label: g.label,
@@ -113,18 +113,21 @@ async function createTicketChannel(guild, member, group) {
     },
   ];
 
-  for (const staffRoleId of config.STAFF_ROLE_IDS) {
-    overwrites.push({
-      id: staffRoleId,
-      allow: [
-        PermissionsBitField.Flags.ViewChannel,
-        PermissionsBitField.Flags.SendMessages,
-        PermissionsBitField.Flags.ReadMessageHistory,
-      ],
-    });
+  // Si group.leadOnly est vrai, le staff général n'a pas accès : seul le patron (leadRoleId) voit le ticket
+  if (!group.leadOnly) {
+    for (const staffRoleId of config.STAFF_ROLE_IDS) {
+      overwrites.push({
+        id: staffRoleId,
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.SendMessages,
+          PermissionsBitField.Flags.ReadMessageHistory,
+        ],
+      });
+    }
   }
 
-  // Seuls les Leads du groupe concerné voient le ticket (en plus du staff)
+  // Le Lead du groupe concerné voit toujours le ticket (patron, ou en plus du staff)
   overwrites.push({
     id: group.leadRoleId,
     allow: [
@@ -146,10 +149,10 @@ async function createTicketChannel(guild, member, group) {
     .setDescription(
       `Bienvenue ${member} 👋\n\n` +
         `Tu postules pour rejoindre **${group.label}**.\n` +
-        `Merci de te présenter en RP et d'attendre la décision du staff.`
+        `Merci de te présenter en RP et d'attendre la décision du patron / staff.`
     )
     .setColor(0x2b2d31)
-    .setFooter({ text: `Groupe demandé : ${group.label}` });
+    .setFooter({ text: `Entreprise demandée : ${group.label}` });
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
