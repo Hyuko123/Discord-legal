@@ -354,4 +354,4 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-client.login(config.TOKEN);
+client.login(process.env.DISCORD_TOKEN)
